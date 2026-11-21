@@ -96,7 +96,9 @@ about the app; the app passes callbacks.
 
    ```yaml
    fleet_agent:
-     path: ../../p4-fleet/agent/fleet_agent   # or git: + path: once published
+     git: https://github.com/optimusprime-nn/p4-fleet.git
+     path: agent/fleet_agent
+     version: main            # dependencies.lock pins the commit
    ```
 
 2. Turn off mDNS's own Wi-Fi hooks in `sdkconfig.defaults`. The agent registers
@@ -130,7 +132,7 @@ about the app; the app passes callbacks.
    fleet_agent_start(&cfg);
    ```
 
-The ONO display (`esp32p4-ono-display`, branch `feat/fleet-agent`) is the
+The ONO display ([esp32p4-ono-display](https://github.com/optimusprime-nn/esp32p4-ono-display)) is the
 reference integration: see `main/fleet.c`.
 
 `status` keys the UI understands: `can_revert`, `prev_version` (enables the
