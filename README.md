@@ -159,3 +159,7 @@ The server then shows the device as monitor-only.
 - Firmware is not signed by the fleet server. The device still checks the
   chip, project name and SHA-256 before it switches, and rolls back an image
   that doesn't come up.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
