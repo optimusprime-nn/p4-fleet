@@ -1,0 +1,8 @@
+/server/target/
+/data/
+.env
+*.swp
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

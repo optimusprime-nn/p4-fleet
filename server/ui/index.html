@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P4 Fleet</title>
+<style>
+:root{
+  --bg:#f6f7f9;--panel:#fff;--panel2:#f0f2f5;--text:#16191f;--muted:#5d6675;--line:#e1e4ea;
+  --accent:#2563eb;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;--okbg:#dcfce7;--warnbg:#fef3c7;--badbg:#fee2e2;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0d1117;--panel:#151b24;--panel2:#1b2330;--text:#e3e8ef;--muted:#8b96a8;--line:#273142;
+  --accent:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--okbg:#12301f;--warnbg:#3a2a0c;--badbg:#3b1416;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;align-items:center;gap:20px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:650;letter-spacing:-.01em}
+nav{display:flex;gap:4px}
+nav button{background:none;border:0;color:var(--muted);padding:6px 12px;border-radius:6px;font:inherit;cursor:pointer}
+nav button.on{background:var(--panel2);color:var(--text);font-weight:600}
+#summary{margin-left:auto;color:var(--muted);font-size:13px}
+main{padding:20px;max-width:1400px;margin:0 auto}
+.banner{background:var(--warnbg);color:var(--warn);padding:10px 14px;border-radius:8px;margin-bottom:14px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.bar .grow{flex:1}
+input[type=text],input[type=password],select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 10px;font:inherit}
+button.b{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 12px;font:inherit;cursor:pointer;white-space:nowrap}
+button.b:hover{border-color:var(--muted)}
+button.b.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.b.danger{color:var(--bad)}
+button.b:disabled{opacity:.45;cursor:default}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+th{font-size:12px;font-weight:600;color:var(--muted);background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{background:var(--panel2)}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:var(--muted)}
+.dot.on{background:var(--ok)}.dot.off{background:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:550}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pill.bad{background:var(--badbg);color:var(--bad)}.pill.info{background:var(--panel2);color:var(--muted)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.15);transform:translateX(105%);transition:transform .18s;z-index:10;overflow-y:auto}
+#drawer.open{transform:none}
+#drawer .hd{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+#drawer .hd h2{font-size:16px;margin:0;flex:1}
+#drawer section{padding:14px 18px;border-bottom:1px solid var(--line)}
+#drawer h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:5px 16px;margin:0}
+dt{color:var(--muted)}dd{margin:0;word-break:break-word}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.spark{width:100%;height:60px;display:block}
+.spark path{fill:none;stroke:var(--accent);stroke-width:1.6}
+.sparkrow{display:grid;grid-template-columns:110px 1fr 80px;gap:10px;align-items:center;margin-bottom:6px}
+.ev{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .t{color:var(--muted);font-size:12px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;max-width:90vw}
+#toast.show{opacity:1}
+.hidden{display:none!important}
+@media (max-width:700px){main{padding:12px}header{padding:10px 12px}#summary{margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <h1>P4 Fleet</h1>
+  <nav id="tabs">
+    <button data-tab="devices" class="on">Devices</button>
+    <button data-tab="firmware">Firmware</button>
+    <button data-tab="rollouts">Rollouts</button>
+    <button data-tab="events">Events</button>
+  </nav>
+  <div id="summary"></div>
+</header>
+
+<main>
+  <div id="banners"></div>
+
+  <div id="tab-devices">
+    <div class="bar">
+      <input type="text" id="addhost" placeholder="Add by address, e.g. 192.168.1.40">
+      <button class="b" id="addbtn">Add device</button>
+      <span class="grow"></span>
+      <span class="muted" id="polled"></span>
+    </div>
+    <div class="card tablewrap"><table>
+      <thead><tr><th>Device</th><th>App</th><th>Version</th><th>Address</th><th class="num">Uptime</th><th class="num">RSSI</th><th class="num">Min heap</th><th>Last reset</th><th>Status</th></tr></thead>
+      <tbody id="devrows"></tbody>
+    </table></div>
+  </div>
+
+  <div id="tab-firmware" class="hidden">
+    <div class="bar">
+      <input type="file" id="fwfile" accept=".bin">
+      <button class="b primary" id="fwup">Upload</button>
+      <span class="muted">The app .bin from <span class="mono">build/</span>, not the merged flash image.</span>
+    </div>
+    <div class="card tablewrap"><table>
+      <thead><tr><th>Project</th><th>Version</th><th>Built</th><th>IDF</th><th class="num">Size</th><th>Devices</th><th></th></tr></thead>
+      <tbody id="fwrows"></tbody>
+    </table></div>
+  </div>
+
+  <div id="tab-rollouts" class="hidden">
+    <div class="card tablewrap"><table>
+      <thead><tr><th>#</th><th>Firmware</th><th>Started</th><th>State</th><th>Result</th></tr></thead>
+      <tbody id="rorows"></tbody>
+    </table></div>
+    <h3 class="muted" style="font-size:13px;margin:20px 0 8px">Recent device updates</h3>
+    <div class="card tablewrap"><table>
+      <thead><tr><th>Device</th><th>Firmware</th><th>From</th><th>Started</th><th>State</th><th>Detail</th></tr></thead>
+      <tbody id="jobrows"></tbody>
+    </table></div>
+  </div>
+
+  <div id="tab-events" class="hidden">
+    <div class="card tablewrap"><table>
+      <thead><tr><th>Time</th><th>Level</th><th>Kind</th><th>Message</th></tr></thead>
+      <tbody id="evrows"></tbody>
+    </table></div>
+  </div>
+</main>
+
+<aside id="drawer"></aside>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let TOKEN = ""; try { TOKEN = localStorage.getItem("p4fleet_token") || ""; } catch (e) {}
+let state = { tab: "devices", devices: [], firmware: [], config: {}, open: null };
+
+async function api(path, opts = {}) {
+  opts.headers = Object.assign({}, opts.headers, TOKEN ? { Authorization: "Bearer " + TOKEN } : {});
+  const r = await fetch("/api" + path, opts);
+  if (r.status === 401) {
+    const t = prompt("Admin token for this fleet server:");
+    if (t) { TOKEN = t.trim(); try { localStorage.setItem("p4fleet_token", TOKEN); } catch (e) {} return api(path, opts); }
+    throw new Error("admin token required");
+  }
+  if (r.status === 204) return null;
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || r.statusText);
+  return body;
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 3500); }
+const ago = ts => { if (!ts) return "never"; const s = Math.max(0, Date.now() / 1000 - ts); return s < 60 ? Math.round(s) + "s ago" : s < 3600 ? Math.round(s / 60) + "m ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago"; };
+const dur = s => s == null ? "–" : s < 3600 ? Math.round(s / 60) + "m" : s < 172800 ? (s / 3600).toFixed(1) + "h" : Math.round(s / 86400) + "d";
+const kb = b => b == null ? "–" : Math.round(b / 1024) + " KB";
+const when = ts => new Date(ts * 1000).toLocaleString();
+const CRASH = ["panic", "int_wdt", "task_wdt", "wdt", "brownout"];
+const JOBPILL = { ok: "ok", rolled_back: "bad", failed: "bad", interrupted: "warn", skipped: "info", queued: "info", pushing: "warn", rebooting: "warn", verifying: "warn" };
+const SEV = { error: "bad", warn: "warn", info: "info" };
+
+function statusPill(d) {
+  if (d.job) return `<span class="pill warn">${esc(d.job.state)}</span>`;
+  const i = d.info || {};
+  if (!d.online) return `<span class="pill bad">offline</span>`;
+  if (i.pending_verify) return `<span class="pill warn">verifying</span>`;
+  const newer = state.firmware.find(f => f.project === i.project && f.elf_sha256 !== i.elf_sha256 && f.uploaded > 0 && isNewest(f));
+  if (newer) return `<span class="pill info">update ${esc(newer.version)}</span>`;
+  return `<span class="pill ok">ok</span>`;
+}
+function isNewest(f) { return state.firmware.filter(g => g.project === f.project)[0] === f; }
+
+function renderDevices() {
+  const rows = state.devices.map(d => {
+    const i = d.info || {};
+    const reset = i.reset_reason ? (CRASH.includes(i.reset_reason) ? `<span class="pill bad">${esc(i.reset_reason)}</span>` : esc(i.reset_reason)) : "–";
+    return `<tr class="click" data-id="${esc(d.id)}">
+      <td><span class="dot ${d.online ? "on" : "off"}"></span>${esc(d.display_name)}</td>
+      <td>${esc(i.label || "–")}</td>
+      <td class="mono">${esc(i.version || "–")}</td>
+      <td class="mono">${esc(d.host)}${d.port !== 80 ? ":" + d.port : ""}</td>
+      <td class="num">${d.online ? dur(i.uptime_s) : '<span class="muted">' + ago(d.last_seen) + "</span>"}</td>
+      <td class="num">${i.rssi ? i.rssi + " dBm" : "–"}</td>
+      <td class="num">${kb(i.heap && i.heap.int_min)}</td>
+      <td>${reset}</td>
+      <td>${statusPill(d)}</td></tr>`;
+  }).join("");
+  $("#devrows").innerHTML = rows || `<tr><td colspan="9" class="empty">No devices yet. Devices with the fleet agent show up here on their own (mDNS), or add one by address.</td></tr>`;
+  const on = state.devices.filter(d => d.online).length;
+  $("#summary").textContent = `${on} of ${state.devices.length} online` + (state.config.version ? ` · v${state.config.version}` : "");
+  $("#polled").textContent = "Refreshed " + new Date().toLocaleTimeString();
+}
+
+function renderFirmware() {
+  $("#fwrows").innerHTML = state.firmware.map(f => {
+    const devs = state.devices.filter(d => (d.info || {}).project === f.project);
+    const running = devs.filter(d => d.info.elf_sha256 === f.elf_sha256).length;
+    return `<tr>
+      <td>${esc(f.project)}</td><td class="mono">${esc(f.version)}</td><td>${esc(f.build)}</td><td class="mono">${esc(f.idf)}</td>
+      <td class="num">${kb(f.size)}</td><td>${running} of ${devs.length} running it</td>
+      <td style="text-align:right"><button class="b primary" data-rollout="${f.id}" ${devs.length === running ? "disabled" : ""}>Roll out</button>
+      <button class="b danger" data-delfw="${f.id}">Delete</button></td></tr>`;
+  }).join("") || `<tr><td colspan="7" class="empty">No firmware uploaded yet.</td></tr>`;
+}
+
+function fwName(id) { const f = state.firmware.find(f => f.id === id); return f ? `${f.project} ${f.version}` : "#" + id; }
+function devName(id) { const d = state.devices.find(d => d.id === id); return d ? d.display_name : id; }
+
+async function renderRollouts() {
+  const r = await api("/rollouts");
+  $("#rorows").innerHTML = r.rollouts.map(x => `<tr><td>${x.id}</td><td>${esc(fwName(x.firmware_id))}</td><td>${when(x.started)}</td>
+    <td><span class="pill ${x.state === "done" ? "ok" : x.state === "running" ? "warn" : "bad"}">${esc(x.state)}</span></td><td>${esc(x.message || x.total + " device(s)")}</td></tr>`).join("")
+    || `<tr><td colspan="5" class="empty">No rollouts yet.</td></tr>`;
+  $("#jobrows").innerHTML = r.jobs.slice(0, 50).map(j => `<tr><td>${esc(devName(j.device_id))}</td><td>${esc(fwName(j.firmware_id))}</td>
+    <td class="mono">${esc(j.from_version)}</td><td>${ago(j.started)}</td><td><span class="pill ${JOBPILL[j.state] || "info"}">${esc(j.state)}</span></td>
+    <td style="white-space:normal">${esc(j.message)}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">No device updates yet.</td></tr>`;
+}
+
+async function renderEvents() {
+  const ev = await api("/events?limit=300");
+  $("#evrows").innerHTML = ev.map(e => `<tr><td>${when(e.ts)}</td><td><span class="pill ${SEV[e.severity]}">${esc(e.severity)}</span></td>
+    <td>${esc(e.kind)}</td><td style="white-space:normal">${esc(e.message)}</td></tr>`).join("") || `<tr><td colspan="4" class="empty">No events yet.</td></tr>`;
+}
+
+function spark(samples, key) {
+  const pts = samples.filter(s => s[key] != null);
+  if (pts.length < 2) return `<span class="muted">not enough data</span>`;
+  const t0 = pts[0].ts, t1 = pts[pts.length - 1].ts || t0 + 1;
+  const vs = pts.map(p => p[key]); let lo = Math.min(...vs), hi = Math.max(...vs); if (hi === lo) { hi += 1; lo -= 1; }
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${((p.ts - t0) / (t1 - t0) * 300).toFixed(1)},${(56 - (p[key] - lo) / (hi - lo) * 52).toFixed(1)}`).join("");
+  return `<svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none"><path d="${d}" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+function kv(obj) {
+  const keys = Object.keys(obj || {});
+  if (!keys.length) return `<span class="muted">nothing reported</span>`;
+  return `<dl>${keys.map(k => `<dt>${esc(k)}</dt><dd class="mono">${esc(typeof obj[k] === "object" ? JSON.stringify(obj[k]) : obj[k])}</dd>`).join("")}</dl>`;
+}
+
+async function openDevice(id) {
+  state.open = id;
+  const r = await api("/devices/" + encodeURIComponent(id));
+  const d = r.device, i = d.info || {}, caps = i.caps || {}, st = i.status || {};
+  const fws = state.firmware.filter(f => f.project === i.project && f.elf_sha256 !== i.elf_sha256);
+  const last = r.samples[r.samples.length - 1] || {};
+  $("#drawer").innerHTML = `
+    <div class="hd"><span class="dot ${d.online ? "on" : "off"}"></span><h2>${esc(d.display_name)}</h2><button class="b" id="dclose">Close</button></div>
+    <section><div class="actions">
+      <button class="b" data-act="identify" ${caps.identify ? "" : "disabled"}>Identify</button>
+      <button class="b" data-act="reboot" ${caps.reboot ? "" : "disabled"}>Reboot</button>
+      <button class="b" data-act="revert" ${caps.revert && st.can_revert ? "" : "disabled"} title="${esc(st.prev_version ? "Back to " + st.prev_version : "")}">Revert${st.prev_version ? " to " + esc(st.prev_version) : ""}</button>
+      ${fws.length ? `<select id="dfw">${fws.map(f => `<option value="${f.id}">${esc(f.version)} · ${esc(f.build)}</option>`).join("")}</select>
+      <button class="b primary" id="dota" ${caps.ota && d.online && !d.job ? "" : "disabled"}>Update</button>` : ""}
+    </div>
+    ${caps.ota ? "" : `<p class="muted" style="margin:10px 0 0">Monitor-only: the device has no fleet token, so updates and actions are off.</p>`}
+    ${d.job ? `<p style="margin:10px 0 0"><span class="pill warn">${esc(d.job.state)}</span> ${esc(d.job.message)}</p>` : ""}
+    ${d.last_error && !d.online ? `<p class="muted" style="margin:10px 0 0">Last error: ${esc(d.last_error)}</p>` : ""}</section>
+    <section><h3>Device</h3><dl>
+      <dt>Name</dt><dd><input type="text" id="dname" value="${esc(d.name || "")}" placeholder="${esc(i.label || "")}" style="width:100%"></dd>
+      <dt>ID</dt><dd class="mono">${esc(d.id)}</dd>
+      <dt>Address</dt><dd class="mono">${esc(d.host)}:${d.port} <span class="muted">(${esc(d.source)})</span></dd>
+      <dt>Hostname</dt><dd class="mono">${esc(i.hostname || "–")}</dd>
+      <dt>Firmware</dt><dd class="mono">${esc(i.project)} ${esc(i.version)}</dd>
+      <dt>Built</dt><dd>${esc(i.build || "–")} · ${esc(i.idf || "")}</dd>
+      <dt>Slot</dt><dd class="mono">${esc(i.partition || "–")}${i.pending_verify ? ' <span class="pill warn">pending verify</span>' : ""}</dd>
+      <dt>Chip</dt><dd>${esc(i.chip || "–")} rev ${esc(i.chip_rev ?? "?")}</dd>
+      <dt>Uptime</dt><dd>${dur(i.uptime_s)} · last reset: ${esc(i.reset_reason || "–")}</dd>
+      <dt>First seen</dt><dd>${when(d.first_seen)}</dd>
+    </dl></section>
+    <section><h3>Last 24 hours</h3>
+      <div class="sparkrow"><span>RSSI</span>${spark(r.samples, "rssi")}<span class="num">${last.rssi != null ? last.rssi + " dBm" : ""}</span></div>
+      <div class="sparkrow"><span>Free heap</span>${spark(r.samples, "heap_int")}<span class="num">${kb(last.heap_int)}</span></div>
+      <div class="sparkrow"><span>Min heap</span>${spark(r.samples, "heap_int_min")}<span class="num">${kb(last.heap_int_min)}</span></div>
+      <div class="sparkrow"><span>PSRAM</span>${spark(r.samples, "heap_psram")}<span class="num">${kb(last.heap_psram)}</span></div>
+    </section>
+    <section><h3>Status</h3>${kv(st)}</section>
+    <section><h3>App</h3>${kv(i.app)}</section>
+    <section><h3>Events</h3>${r.events.map(e => `<div class="ev"><span class="pill ${SEV[e.severity]}">${esc(e.kind)}</span><span>${esc(e.message)}</span><span></span><span class="t">${when(e.ts)}</span></div>`).join("") || '<span class="muted">none</span>'}</section>
+    <section><button class="b danger" id="ddel">Remove from fleet</button></section>`;
+  $("#drawer").classList.add("open");
+  $("#dclose").onclick = closeDrawer;
+  $("#dname").onchange = async e => { await api("/devices/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: e.target.value }) }); toast("Name saved"); refresh(); };
+  $("#ddel").onclick = async () => { if (!confirm("Remove this device? It is found again if it still announces itself.")) return; await api("/devices/" + id, { method: "DELETE" }); closeDrawer(); refresh(); };
+  document.querySelectorAll("#drawer [data-act]").forEach(b => b.onclick = async () => {
+    const a = b.dataset.act;
+    if (a !== "identify" && !confirm(a === "reboot" ? "Reboot this device?" : `Boot the previous firmware (${st.prev_version})?`)) return;
+    try { const res = await api(`/devices/${id}/${a}`, { method: "POST" }); toast(res.message || "done"); } catch (e) { toast(e.message); }
+  });
+  const ota = $("#dota");
+  if (ota) ota.onclick = async () => {
+    const fid = +$("#dfw").value;
+    if (!confirm(`Install ${fwName(fid)} on ${d.display_name}?`)) return;
+    try { await api(`/devices/${id}/ota`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ firmware_id: fid }) }); toast("Update started"); refresh(); openDevice(id); } catch (e) { toast(e.message); }
+  };
+}
+function closeDrawer() { state.open = null; $("#drawer").classList.remove("open"); }
+
+async function refresh() {
+  try {
+    [state.devices, state.firmware] = await Promise.all([api("/devices"), api("/firmware")]);
+    renderDevices();
+    if (state.tab === "firmware") renderFirmware();
+    if (state.tab === "rollouts") await renderRollouts();
+    if (state.tab === "events") await renderEvents();
+  } catch (e) { toast(e.message); }
+}
+
+async function init() {
+  try { state.config = await api("/config"); } catch (e) { toast(e.message); }
+  const b = [];
+  if (state.config && state.config.device_token_set === false) b.push("FLEET_DEVICE_TOKEN is not set on the server: devices can be monitored, but not updated, rebooted or reverted.");
+  $("#banners").innerHTML = b.map(t => `<div class="banner">${esc(t)}</div>`).join("");
+  await refresh();
+  setInterval(() => {
+    refresh();
+    const busy = $("#drawer").contains(document.activeElement) && /INPUT|SELECT/.test(document.activeElement.tagName);
+    if (state.open && !busy && document.visibilityState === "visible") openDevice(state.open).catch(() => {});
+  }, 10000);
+}
+
+$("#tabs").onclick = e => {
+  const t = e.target.dataset.tab; if (!t) return;
+  state.tab = t;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  ["devices", "firmware", "rollouts", "events"].forEach(n => $("#tab-" + n).classList.toggle("hidden", n !== t));
+  refresh();
+};
+$("#devrows").onclick = e => { const tr = e.target.closest("tr[data-id]"); if (tr) openDevice(tr.dataset.id).catch(err => toast(err.message)); };
+$("#addbtn").onclick = async () => {
+  const host = $("#addhost").value.trim(); if (!host) return;
+  $("#addbtn").disabled = true;
+  try { const d = await api("/devices", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ host }) }); toast("Added " + d.display_name); $("#addhost").value = ""; refresh(); }
+  catch (e) { toast(e.message); } finally { $("#addbtn").disabled = false; }
+};
+$("#fwup").onclick = async () => {
+  const f = $("#fwfile").files[0]; if (!f) return toast("Choose a .bin file first");
+  $("#fwup").disabled = true;
+  try {
+    const r = await api("/firmware?filename=" + encodeURIComponent(f.name), { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: f });
+    toast(r.duplicate ? "Already uploaded" : `Uploaded ${r.firmware.project} ${r.firmware.version}`); $("#fwfile").value = ""; refresh();
+  } catch (e) { toast(e.message); } finally { $("#fwup").disabled = false; }
+};
+$("#fwrows").onclick = async e => {
+  const ro = e.target.dataset.rollout, del = e.target.dataset.delfw;
+  if (ro) {
+    if (!confirm(`Roll out ${fwName(+ro)} to every device running ${state.firmware.find(f => f.id === +ro).project}? Devices update one at a time and the rollout stops at the first failure.`)) return;
+    try { const r = await api(`/firmware/${ro}/rollout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stop_on_failure: true }) });
+      toast(`Rollout #${r.rollout_id}: ${r.targets.length} device(s)` + (r.skipped.length ? `, ${r.skipped.length} skipped` : "")); } catch (err) { toast(err.message); }
+  }
+  if (del) { if (!confirm("Delete this firmware file?")) return; try { await api("/firmware/" + del, { method: "DELETE" }); refresh(); } catch (err) { toast(err.message); } }
+};
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+init();
+</script>
+</body>
+</html>

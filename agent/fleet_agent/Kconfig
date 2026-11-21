@@ -1,0 +1,20 @@
+menu "P4 Fleet agent"
+
+    config FLEET_AGENT_TOKEN
+        string "Fleet token"
+        default ""
+        help
+            Shared secret the p4-fleet server sends as "Authorization: Bearer
+            <token>" for OTA, reboot, revert and identify. Must match
+            FLEET_DEVICE_TOKEN on the server. Leave empty to make the device
+            monitor-only (GET /fleet/info still works).
+            Put it in sdkconfig.defaults.local so it stays out of git.
+
+    config FLEET_AGENT_MDNS
+        bool "Announce the device over mDNS (_p4fleet._tcp)"
+        default y
+        help
+            Lets the server discover the device on its own. Without it, add the
+            device to the server by IP address.
+
+endmenu

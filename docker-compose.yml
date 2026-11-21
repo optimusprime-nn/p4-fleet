@@ -1,0 +1,11 @@
+services:
+  p4fleet:
+    build: ./server
+    container_name: p4fleet
+    restart: unless-stopped
+    # Host networking so mDNS discovery (multicast) reaches the devices.
+    # Without it, set FLEET_MDNS=0, publish port 8790 and add devices by IP.
+    network_mode: host
+    env_file: .env
+    volumes:
+      - ./data:/data

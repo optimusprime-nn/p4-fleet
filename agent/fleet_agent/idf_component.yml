@@ -1,0 +1,7 @@
+version: "0.1.0"
+description: "P4 Fleet agent: mDNS discovery, health info and token-protected OTA/reboot/revert for the p4-fleet server"
+license: "MIT"
+dependencies:
+  idf: ">=5.3"
+  espressif/cjson: "^1.7.19"
+  espressif/mdns: "^1.8.0"
